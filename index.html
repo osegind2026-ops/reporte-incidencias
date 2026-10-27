@@ -34,10 +34,16 @@
   </div>
   <div class="caja">
     <h2>2. Envía los mensajes de prueba</h2>
-    <p>Se envían 3 mensajes <b>cifrados</b> de distinto tamaño (pequeño, mediano y uno del tamaño de una foto) para saber cuánto acepta Google.</p>
+    <p>Se envían 7 mensajes <b>cifrados</b> de 3 mil a 32 mil caracteres para medir cuánto acepta Google en un solo mensaje.</p>
     <button id="enviar">Enviar mensajes de prueba</button>
     <div id="codigo"></div>
     <div class="res" id="res"></div>
+  </div>
+  <div class="caja">
+    <h2>3. Envío de diagnóstico (si no llegaron)</h2>
+    <p>Manda un mensaje pequeño cifrado y <b>abre la respuesta de Google en otra pestaña</b>. Ahí verás si dice «Se registró tu respuesta», si pide iniciar sesión o si marca un error. Toma captura de lo que aparezca.</p>
+    <button id="diag" style="background:#1F4E79">Envío de diagnóstico</button>
+    <form id="fDiag" method="POST" target="_blank" style="display:none"></form>
   </div>
   <p style="text-align:center;font-size:12px">Este mensaje solo contiene texto de prueba; no lleva datos de personas.</p>
 </main>
@@ -79,7 +85,8 @@ $("enviar").onclick = async () => {
   $("enviar").disabled = true;
   const codigo = Math.random().toString(36).slice(2, 6).toUpperCase();
   $("codigo").innerHTML = `<p style="margin-top:12px">Código de esta prueba (lo verás en la PC):</p><div class="codigo">${codigo}</div>`;
-  const pruebas = [["pequeño", 1000], ["mediano", 30000], ["foto", 150000]];
+  // calibracion: el de 2 mil llego y el de 40 mil no; se busca el limite real de Google
+  const pruebas = [["3K", 2200], ["5K", 3700], ["8K", 5900], ["12K", 8900], ["16K", 11900], ["24K", 17900], ["32K", 23900]];
   const url = "https://docs.google.com/forms/d/e/" + d.form + "/formResponse";
   let html = "";
   for (const [nombre, tam] of pruebas) {
@@ -87,7 +94,8 @@ $("enviar").onclick = async () => {
       const relleno = "x".repeat(tam);
       const datos = JSON.stringify({ prueba: codigo, nombre, tam, enviado: new Date().toISOString(), navegador: navigator.userAgent.slice(0, 120), relleno });
       const cif = await cifrar(datos);
-      const cuerpo = new URLSearchParams(); cuerpo.append("entry." + d.entry, cif);
+      // ademas del campo, los datos que el formulario de Google envia normalmente
+      const cuerpo = new URLSearchParams(); cuerpo.append("entry." + d.entry, cif); cuerpo.append("fvv", "1"); cuerpo.append("pageHistory", "0");
       await fetch(url, { method: "POST", mode: "no-cors", body: cuerpo });
       html += `<div><span class="ok">Enviado</span> · ${nombre} (${Math.round(cif.length / 1000)} mil caracteres cifrados)</div>`;
     } catch (e) {
@@ -95,8 +103,20 @@ $("enviar").onclick = async () => {
     }
     $("res").innerHTML = html;
   }
-  $("res").innerHTML = html + `<div>Listo. Anota el código <b>${codigo}</b> y sigue con el paso D en la PC del trabajo.</div>`;
+  $("res").innerHTML = html + `<div>Listo. Anota el código <b>${codigo}</b> y revisa si llegaron a la hoja.</div>`;
   $("enviar").disabled = false;
+};
+
+// envio visible: un formulario normal que abre la pagina de respuesta de Google
+$("diag").onclick = async () => {
+  const d = mostrarVinculo();
+  if (!d) { alert("Primero pega el vínculo prellenado del Google Form (paso 1)."); return; }
+  const cif = await cifrar(JSON.stringify({ prueba: "DIAG", nombre: "diagnóstico", tam: 0, enviado: new Date().toISOString(), navegador: navigator.userAgent.slice(0, 120), relleno: "" }));
+  const f = $("fDiag");
+  f.action = "https://docs.google.com/forms/d/e/" + d.form + "/formResponse";
+  f.innerHTML = "";
+  for (const [k, v] of [["entry." + d.entry, cif], ["fvv", "1"], ["pageHistory", "0"]]) { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; f.appendChild(i); }
+  f.submit();
 };
 </script>
 </body>
