@@ -86,7 +86,7 @@
 .frm-pagina .frm { border-radius: 0; border: 0; min-height: 100vh; }
 @media (min-width: 600px) { .frm-pagina { padding: 24px 16px; } .frm-pagina .frm { border-radius: 18px; border: 1px solid var(--borde); min-height: 0; box-shadow: var(--sombra); } }
 .frm-membrete { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 560px; margin: 0 auto 14px; padding: 12px 16px 0; }
-.frm-membrete img:first-child { height: 40px; } .frm-membrete img:last-child { height: 56px; }
+.frm-membrete img:first-of-type { height: 40px; } .frm-membrete img:last-of-type { height: 56px; }
 .frm-final { text-align: center; padding: 40px 20px; }
 .frm-final .circ { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 14px; }
 .frm-final .circ svg { width: 34px; height: 34px; }
@@ -197,3 +197,9 @@ details.cat-det[open] summary { margin-bottom: 8px; }
 .ev-sif .frm-chk { margin: 0 0 8px; align-items: flex-start; }
 @media (max-width: 760px) { .ev-sif { grid-template-columns: 1fr; } .ev-paso { grid-template-columns: 26px 1fr; } .ev-paso .sn { grid-column: 2; } }
 .ev-clasif tr.on td { background: #FBF7F2; font-weight: 600; }
+
+/* ---------- ejemplos de clasificacion */
+.ej-panel .ej-grupo { margin: 8px 0 4px; }
+.ej-panel .ej-grupo > .badge { margin-bottom: 4px; }
+.ej-it { font-size: 12.5px; line-height: 1.45; padding: 3px 0 3px 10px; border-left: 2px solid var(--borde); margin: 2px 0; }
+.ej-f { font-size: 10.5px; color: var(--texto-3); white-space: nowrap; }

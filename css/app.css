@@ -36,6 +36,20 @@ button, input, select, textarea { font-family: inherit; font-size: 14px; color: 
   background: radial-gradient(1200px 500px at 50% -10%, #fff 0%, var(--fondo) 70%); }
 .login-membrete { width: min(860px, 100%); margin-bottom: 26px; }
 .login-membrete img { width: 100%; display: block; }
+/* nombre de la app al centro del membrete (entre el logo de Gobierno de Mexico/CFE y el emblema) */
+.membrete-titulo { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.15; padding: 4px 14px; margin: 0 6px;
+  border-left: 1px solid var(--dorado); border-right: 1px solid var(--dorado); }
+.membrete-titulo b { font-size: 26px; font-weight: 700; color: var(--guinda); letter-spacing: .01em; }
+.membrete-titulo .mt-sup { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--dorado); margin-bottom: 3px; }
+.membrete-titulo .mt-sub { font-size: 11.5px; color: var(--texto-2); margin-top: 3px; }
+.frm-membrete .membrete-titulo { padding: 2px 10px; }
+.frm-membrete .membrete-titulo b { font-size: 19px; }
+.frm-membrete .membrete-titulo .mt-sup { font-size: 9px; } .frm-membrete .membrete-titulo .mt-sub { font-size: 10px; }
+@media (max-width: 520px) {
+  .frm-membrete, .login-membrete { flex-wrap: wrap; }
+  .login-membrete img:first-of-type { height: 40px !important; } .login-membrete img:last-of-type { height: 56px !important; }
+  .membrete-titulo { order: 3; flex-basis: 100%; border: 0; border-top: 1px solid var(--dorado); margin: 8px 0 0; padding-top: 8px; }
+}
 .login-caja { width: min(400px, 100%); background: var(--panel); border-radius: 18px; box-shadow: var(--sombra-2); padding: 30px 30px 26px; border-top: 5px solid var(--guinda); }
 .login-caja h1 { font-size: 20px; color: var(--guinda); }
 .login-caja p { margin: 6px 0 20px; color: var(--texto-2); font-size: 13px; line-height: 1.5; }

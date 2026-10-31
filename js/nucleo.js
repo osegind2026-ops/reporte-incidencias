@@ -144,14 +144,21 @@ B.d = {
   codigoTxt(n) { const c = this.codigo(n); return c ? c.n + " · Evento Industrial – " + c.c : ""; },
 
   hayLesion(x) { return !!(x.evento && x.evento.hayLesion); },
+  // lesion / cuasi / salud (los folios anteriores a la v1.2 solo traen hayLesion)
+  tipoEvento(x) { const e = (x && x.evento) || {}; return e.tipo || (e.hayLesion ? "lesion" : "cuasi"); },
+  esSalud(x) { return this.tipoEvento(x) === "salud"; },
+  TIPO_EVENTO: { lesion: "Persona lesionada", cuasi: "Cuasi-accidente", menor: "Incidente sin lesionados", salud: "Evento de salud" },
   tituloInc(x) {
     const a = (x.afectados || [])[0], l = a && a.lesion;
-    const que = this.hayLesion(x) ? (l && l.tipo ? U.cap(l.tipo) + (l.parte ? " en " + l.parte.toLowerCase() : "") : "Lesión") : "Cuasi-accidente";
+    const s = x.salud || {}, sint = (s.sintomas || []).concat(s.otro ? [s.otro] : []);
+    const que = this.hayLesion(x) ? (l && l.tipo ? U.cap(l.tipo) + (l.parte ? " en " + l.parte.toLowerCase() : "") : "Lesión")
+      : this.esSalud(x) ? "Evento de salud" + (sint.length ? ": " + sint.slice(0, 2).join(", ").toLowerCase() : "")
+      : this.tipoEvento(x) === "menor" ? "Incidente" + ((x.rapido || {}).tipos || []).slice(0, 1).map(t => ": " + t.toLowerCase()).join("") : "Cuasi-accidente";
     return que + (x.evento?.lugar ? " · " + x.evento.lugar : "");
   },
   afectadoTxt(x) {
     const a = x.afectados || [];
-    if (!a.length) return x.evento?.hayLesion === false ? "Sin lesionados" : "—";
+    if (!a.length) return ["cuasi", "menor"].includes(this.tipoEvento(x)) ? "Sin lesionados" : "—";
     return a.map(p => p.nombre || p.rpe).join(", ");
   },
   // desviaciones registradas por trabajador (flujo PAG-28-13): para avisar reincidencias
@@ -180,6 +187,20 @@ B.d = {
     const urls = B.estado?.servidor?.urls || [];
     const red = urls.find(u => /\/\/\d+\.\d+\.\d+\.\d+/.test(u)) || urls.find(u => !u.includes("localhost"));
     return (red || location.origin + "/").replace(/\/+$/, "") + "/f/" + token;
+  },
+  // seguimiento de un link enviado: sin abrir / llenando / abierto / reporte enviado
+  actividadLink(l) {
+    const a = (B.estado?.aperturas || {})[U.up(l.token)] || {};
+    const hace = fh => { const m = Math.max(0, Math.round((Date.now() - new Date(fh)) / 60000)); return m < 1 ? "hace un momento" : m < 60 ? "hace " + m + " min" : m < 1440 ? "hace " + Math.round(m / 60) + " h" : U.fh(fh); };
+    const det = a.ultima ? [(a.n > 1 ? "lo abrió " + a.n + " veces" : "lo abrió") + " el " + U.fh(a.primera), "última actividad " + hace(a.ultima),
+      a.paso && a.total ? "paso " + a.paso + " de " + a.total + (a.tit ? " (" + a.tit + ")" : "") : "", a.disp || ""].filter(Boolean).join(" · ") : "";
+    if (l.usado) return { t: "Reporte enviado", c: "v", det };
+    if (l.anulado) return { t: "Cancelado", c: "n", det };
+    const vencido = l.vence <= new Date().toISOString().slice(0, 19);
+    if (!a.ultima) return { t: vencido ? "Venció sin abrirse" : "Sin abrir", c: vencido ? "r" : "n", det: vencido ? "" : "Aún no se ha abierto" + (B.enLinea && B.enLinea.listo() ? " (en línea se actualiza cada 3 min)" : "") };
+    if (vencido) return { t: "Venció sin enviarse", c: "r", det };
+    const llenando = Date.now() - new Date(a.ultima) < 15 * 60000;
+    return { t: llenando ? "Llenando ahora" : "Abierto, sin enviar", c: llenando ? "a" : "am", det };
   },
   enRed() { return !!B.estado?.servidor?.enRed || !!(this.cfg().urlBase || "").trim(); }
 };

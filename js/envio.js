@@ -82,13 +82,36 @@
     return { id: preparado.id };
   }
 
+  // aviso de apertura y avance: S.I. ve que el link se abrio y en que paso va (llega con la siguiente
+  // lectura de la hoja). Un renglon cifrado "INC2P|id|..." por aviso; a lo mas uno por minuto mientras llena.
+  const disp = /Android/.test(navigator.userAgent) ? "Android" : /iPhone|iPad/.test(navigator.userAgent) ? "iPhone" : /Windows/.test(navigator.userAgent) ? "PC Windows" : "";
+  let ultAviso = 0, pendiente = { paso: 1 }, temporizador = null;
+  async function avisar(ev, paso, total, tit) {
+    try {
+      const id = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(36).padStart(2, "0")).join("").toUpperCase();
+      const txt = await cifrar(JSON.stringify({ k, ev, paso, total, tit, disp, fh: new Date().toISOString() }));
+      const cuerpo = new URLSearchParams();
+      cuerpo.append("entry." + C.entry, "INC2P|" + id + "|" + txt); cuerpo.append("fvv", "1"); cuerpo.append("pageHistory", "0");
+      ultAviso = Date.now();
+      await fetch("https://docs.google.com/forms/d/e/" + C.formId + "/formResponse", { method: "POST", mode: "no-cors", body: cuerpo });
+    } catch (e) { }
+  }
+  function alPaso(paso, total, tit) {
+    if (pendiente && pendiente.paso === paso) return;
+    pendiente = { paso, total, tit };
+    const falta = 60000 - (Date.now() - ultAviso);
+    clearTimeout(temporizador);
+    temporizador = setTimeout(() => { const p = pendiente; avisar("paso", p.paso, p.total, p.tit); }, Math.max(0, falta));
+  }
+  avisar("abrio", 1, 0, "");
+
   document.querySelector(".cargando")?.remove();
-  raiz.innerHTML = `<div class="frm-membrete"><img src="img/logo_izq.png" alt="Gobierno de México · CFE"><img src="img/logo_der.png" alt=""></div><div id="frm"></div>`;
+  raiz.innerHTML = `<div class="frm-membrete"><img src="img/logo_izq.png" alt="Gobierno de México · CFE"><div class="membrete-titulo"><span class="mt-sup">Seguridad Industrial · CNLV</span><b>Incidencias SI</b><span class="mt-sub">Reporte e investigación de incidencias laborales</span></div><img src="img/logo_der.png" alt=""></div><div id="frm"></div>`;
   B.form.montar(document.getElementById("frm"), {
     modo: "link", clave: link.t, catalogos: C.catalogos || {},
     buscar, fotoPersona: () => "", libreAfectado: true, ayudaBuscar: "Escribe el RPE completo (5 caracteres)",
     maxFoto: 1024, maxFotoPersona: 480, calidadFoto: 0.65,
-    enviar,
-    alEnviar: r => final(true, "Reporte enviado", `Gracias. Seguridad Industrial recibirá tu reporte (núm. ${U.esc(r.id)}) en unos minutos y lo revisará para iniciar la investigación.<br><br>Si recuerdas algo más, avísale directamente al supervisor de Seguridad Industrial.`)
+    enviar, alPaso,
+    alEnviar: r => final(true, "Reporte enviado", `Gracias. Seguridad Industrial recibirá tu reporte (núm. ${U.esc(r.id)}) en unos minutos y lo revisará para iniciar la investigación.<br><br>Si guardaste evidencia (guantes, herramienta, pieza o material), entrégala a Seguridad Industrial.<br><br>Si recuerdas algo más, avísale directamente al supervisor de Seguridad Industrial.`)
   });
 })();
