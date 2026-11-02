@@ -17,7 +17,7 @@ B.cargarImagenes = async function (ver) {
     B.imgs.ver = r.ver || "";
   } catch (e) { }
   const DEF = { logoIzq: 94 / 454, logoDer: 184 / 175, pieEmblema: 153 / 300 };
-  B.imgs.asp = { ...DEF };
+  B.imgs.asp = Object.assign({}, DEF);
   await Promise.all(Object.keys(IMG_ARCHIVO).map(k => new Promise(res => {
     const i = new Image(), t = setTimeout(res, 3000);   // nunca bloquea el inicio
     i.onload = () => { if (i.naturalWidth) B.imgs.asp[k] = i.naturalHeight / i.naturalWidth; clearTimeout(t); res(); };
@@ -32,10 +32,10 @@ const MESES_C = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", 
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 const pad = n => String(n).padStart(2, "0");
 B.u = {
-  esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); },
+  esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); },
   br(s) { return B.u.esc(s).replace(/\n/g, "<br>"); },
   md(s) { return B.u.esc(s).replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>"); },
-  norm(s) { return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); },
+  norm(s) { return String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); },
   iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); },
   hoy() { return B.u.iso(new Date()); },
   ahoraHora() { const d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); },
@@ -62,7 +62,7 @@ B.u = {
   debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; },
   plural(n, s, p) { return n + " " + (n === 1 ? s : (p || s + "s")); },
   id() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
-  copia(o) { return JSON.parse(JSON.stringify(o ?? null)); }
+  copia(o) { return JSON.parse(JSON.stringify(o === undefined ? null : o)); }
 };
 const U = B.u;
 
@@ -109,10 +109,10 @@ B.d = {
   incidencias(conAnuladas) { return ((B.estado && B.estado.incidencias) || []).filter(x => conAnuladas || x.estado !== "anulado"); },
   inc(id) { return ((B.estado && B.estado.incidencias) || []).find(x => String(x.id) === String(id)); },
   persona(rpe) {
-    if (!this._idx) { this._idx = {}; for (const p of (B.estado?.personal || [])) this._idx[p.rpe] = p; }
+    if (!this._idx) { this._idx = {}; for (const p of ((B.estado || {}).personal || [])) this._idx[p.rpe] = p; }
     return this._idx[U.up(rpe)] || null;
   },
-  supervisor(rpe) { return (B.estado?.supervisores || []).find(s => s.rpe === rpe); },
+  supervisor(rpe) { return ((B.estado || {}).supervisores || []).find(s => s.rpe === rpe); },
   nombreSup(rpe) { const s = this.supervisor(rpe); return s ? s.nombre : (rpe || ""); },
 
   ESTADOS: { investigacion: ["En investigación", "d"], acciones: ["Acciones en curso", "a"], cerrado: ["Cerrado", "v"], anulado: ["Anulado", "n"] },
@@ -124,16 +124,16 @@ B.d = {
   habilesEntre(a, b) { if (b <= a) return 0; let f = a, k = 0; while (f < b) { f = U.sumar(f, 1); if (this.esHabil(f)) k++; } return k; },
   // investigacion preliminar: <= 10 dias habiles a partir del accidente (PAG-28 6.4 b.2)
   plazo(x) {
-    const f = x.evento?.fecha; if (!f) return null;
+    const f = (x.evento || {}).fecha; if (!f) return null;
     const n = +this.cfg().plazoDias || 10, vence = this.habiles(f, n), hoy = U.hoy();
     const quedan = vence >= hoy ? this.habilesEntre(hoy, vence) : -this.habilesEntre(vence, hoy);
     return { vence, quedan, n, vencido: hoy > vence };
   },
-  acciones(x) { return (x.acciones || []).map(a => ({ ...a, vencida: a.estado !== "Cerrada" && a.fecha && a.fecha < U.hoy(), sinResp: !a.resp })); },
+  acciones(x) { return (x.acciones || []).map(a => Object.assign({}, a, { vencida: a.estado !== "Cerrada" && a.fecha && a.fecha < U.hoy(), sinResp: !a.resp })); },
   accionesAbiertas(x) { return this.acciones(x).filter(a => a.estado !== "Cerrada"); },
   todasAcciones() {
     const r = [];
-    for (const x of this.incidencias()) for (const a of this.acciones(x)) r.push({ ...a, inc: x });
+    for (const x of this.incidencias()) for (const a of this.acciones(x)) r.push(Object.assign({}, a, { inc: x }));
     return r;
   },
 
@@ -154,7 +154,7 @@ B.d = {
     const que = this.hayLesion(x) ? (l && l.tipo ? U.cap(l.tipo) + (l.parte ? " en " + l.parte.toLowerCase() : "") : "Lesión")
       : this.esSalud(x) ? "Evento de salud" + (sint.length ? ": " + sint.slice(0, 2).join(", ").toLowerCase() : "")
       : this.tipoEvento(x) === "menor" ? "Incidente" + ((x.rapido || {}).tipos || []).slice(0, 1).map(t => ": " + t.toLowerCase()).join("") : "Cuasi-accidente";
-    return que + (x.evento?.lugar ? " · " + x.evento.lugar : "");
+    return que + ((x.evento || {}).lugar ? " · " + x.evento.lugar : "");
   },
   afectadoTxt(x) {
     const a = x.afectados || [];
@@ -166,7 +166,7 @@ B.d = {
     const r = [];
     for (const x of this.incidencias()) {
       if (String(x.id) === String(excepto)) continue;
-      if (x.desviacion?.acto === "si" && (x.afectados || []).some(a => U.up(a.rpe) === U.up(rpe))) r.push({ folio: x.folio, fecha: x.evento?.fecha, motivo: x.desviacion.motivo });
+      if ((x.desviacion || {}).acto === "si" && (x.afectados || []).some(a => U.up(a.rpe) === U.up(rpe))) r.push({ folio: x.folio, fecha: (x.evento || {}).fecha, motivo: x.desviacion.motivo });
     }
     return r;
   },
@@ -184,13 +184,13 @@ B.d = {
   urlLink(token) {
     const base = (this.cfg().urlBase || "").trim();
     if (base) return base.replace(/\/+$/, "") + "/f/" + token;
-    const urls = B.estado?.servidor?.urls || [];
+    const urls = ((B.estado || {}).servidor || {}).urls || [];
     const red = urls.find(u => /\/\/\d+\.\d+\.\d+\.\d+/.test(u)) || urls.find(u => !u.includes("localhost"));
     return (red || location.origin + "/").replace(/\/+$/, "") + "/f/" + token;
   },
   // seguimiento de un link enviado: sin abrir / llenando / abierto / reporte enviado
   actividadLink(l) {
-    const a = (B.estado?.aperturas || {})[U.up(l.token)] || {};
+    const a = ((B.estado || {}).aperturas || {})[U.up(l.token)] || {};
     const hace = fh => { const m = Math.max(0, Math.round((Date.now() - new Date(fh)) / 60000)); return m < 1 ? "hace un momento" : m < 60 ? "hace " + m + " min" : m < 1440 ? "hace " + Math.round(m / 60) + " h" : U.fh(fh); };
     const det = a.ultima ? [(a.n > 1 ? "lo abrió " + a.n + " veces" : "lo abrió") + " el " + U.fh(a.primera), "última actividad " + hace(a.ultima),
       a.paso && a.total ? "paso " + a.paso + " de " + a.total + (a.tit ? " (" + a.tit + ")" : "") : "", a.disp || ""].filter(Boolean).join(" · ") : "";
@@ -202,5 +202,5 @@ B.d = {
     const llenando = Date.now() - new Date(a.ultima) < 15 * 60000;
     return { t: llenando ? "Llenando ahora" : "Abierto, sin enviar", c: llenando ? "a" : "am", det };
   },
-  enRed() { return !!B.estado?.servidor?.enRed || !!(this.cfg().urlBase || "").trim(); }
+  enRed() { return !!((B.estado || {}).servidor || {}).enRed || !!(this.cfg().urlBase || "").trim(); }
 };

@@ -12,8 +12,10 @@
   const enc = new TextEncoder(), dec = new TextDecoder();
   const b64 = buf => { let s = ""; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s); };
   const deB64u = s => { const t = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)); const a = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) a[i] = t.charCodeAt(i); return a; };
+  const quitarCarga = () => { const c = document.querySelector(".cargando"); if (c) c.remove(); };
   const final = (ok, titulo, texto) => {
-    document.querySelector(".cargando")?.remove();
+    window.INC_LISTO = true;
+    quitarCarga();
     raiz.innerHTML = `<div class="frm"><div class="frm-cab"><div class="frm-t1">Reporte inmediato de incidencia</div><div class="frm-t2">Oficina de Seguridad Industrial · CNLV</div></div>
       <div class="frm-final ${ok ? "ok" : "mal"}"><div class="circ">${B.ico(ok ? "ok" : "alerta")}</div><h2>${titulo}</h2><p>${texto}</p></div></div>`;
   };
@@ -105,7 +107,7 @@
   }
   avisar("abrio", 1, 0, "");
 
-  document.querySelector(".cargando")?.remove();
+  quitarCarga();
   raiz.innerHTML = `<div class="frm-membrete"><img src="img/logo_izq.png" alt="Gobierno de México · CFE"><div class="membrete-titulo"><span class="mt-sup">Seguridad Industrial · CNLV</span><b>Incidencias SI</b><span class="mt-sub">Reporte e investigación de incidencias laborales</span></div><img src="img/logo_der.png" alt=""></div><div id="frm"></div>`;
   B.form.montar(document.getElementById("frm"), {
     modo: "link", clave: link.t, catalogos: C.catalogos || {},
@@ -114,4 +116,5 @@
     enviar, alPaso,
     alEnviar: r => final(true, "Reporte enviado", `Gracias. Seguridad Industrial recibirá tu reporte (núm. ${U.esc(r.id)}) en unos minutos y lo revisará para iniciar la investigación.<br><br>Si guardaste evidencia (guantes, herramienta, pieza o material), entrégala a Seguridad Industrial.<br><br>Si recuerdas algo más, avísale directamente al supervisor de Seguridad Industrial.`)
   });
+  window.INC_LISTO = true;   // js/arranque.js: el formulario ya se muestra
 })();

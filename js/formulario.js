@@ -10,6 +10,7 @@
 "use strict";
 B.form = (function () {
   const E = s => U.esc(s);
+  const sinNulo = v => v == null ? "" : v;
   // palabras que convierten un hecho en juicio (el reporte inmediato debe quedar en hechos)
   const JUICIOS = [
     [/descuid/i, "\"descuido\" es una conclusión. Describe lo que se observó."],
@@ -102,8 +103,8 @@ B.form = (function () {
     const seg = (ruta, opciones, valor) => `<div class="frm-seg" data-seg="${ruta}">${opciones.map(o => `<button type="button" class="${String(o) === String(valor) ? "on" : ""}" data-v="${E(o)}">${E(o)}</button>`).join("")}</div>`;
     const obtener = ruta => ruta.split(".").reduce((o, k) => o == null ? o : o[k], f);
     const fijar = (ruta, v) => { const ks = ruta.split("."); let o = f; ks.slice(0, -1).forEach(k => o = o[k]); o[ks[ks.length - 1]] = v; guardarBorrador(); };
-    const inp = (ruta, tipo, ph, extra) => `<input class="inp" type="${tipo || "text"}" data-r="${ruta}" value="${E(obtener(ruta) ?? "")}" placeholder="${E(ph || "")}" ${extra || ""}>`;
-    const area = (ruta, filas, ph) => `<textarea class="inp" rows="${filas || 3}" data-r="${ruta}" placeholder="${E(ph || "")}">${E(obtener(ruta) ?? "")}</textarea>`;
+    const inp = (ruta, tipo, ph, extra) => `<input class="inp" type="${tipo || "text"}" data-r="${ruta}" value="${E(sinNulo(obtener(ruta)))}" placeholder="${E(ph || "")}" ${extra || ""}>`;
+    const area = (ruta, filas, ph) => `<textarea class="inp" rows="${filas || 3}" data-r="${ruta}" placeholder="${E(ph || "")}">${E(sinNulo(obtener(ruta)))}</textarea>`;
     function enlazar(raiz) {
       raiz.querySelectorAll("[data-r]").forEach(el => {
         const ev = el.type === "checkbox" ? "change" : "input";
@@ -462,15 +463,15 @@ B.form = (function () {
       const decl = [];
       if (f.declAfectado.trim() && af.length) decl.push({ quien: "Persona afectada · " + af[0].nombre + (af[0].rpe ? " (" + af[0].rpe + ")" : ""), texto: f.declAfectado.trim(), fecha: e.fecha });
       const datos = {
-        evento: { ...e }, afectados: af, reporta: f.reporta, relato: f.relato.trim(), declaraciones: decl, testigos: f.testigos.trim(),
-        epp: salud() ? [] : f.epp.map(x => ({ ...x, adecuado: "" })), eppGuante: salud() ? "" : f.eppGuante, eppEstado: salud() ? "" : f.eppEstado,
-        medico: { ...f.medico, atencion: "", incapacidad: false, dias: 0, st7: false },
+        evento: Object.assign({}, e), afectados: af, reporta: f.reporta, relato: f.relato.trim(), declaraciones: decl, testigos: f.testigos.trim(),
+        epp: salud() ? [] : f.epp.map(x => Object.assign({}, x, { adecuado: "" })), eppGuante: salud() ? "" : f.eppGuante, eppEstado: salud() ? "" : f.eppEstado,
+        medico: Object.assign({}, f.medico, { atencion: "", incapacidad: false, dias: 0, st7: false }),
         accionesInm: inm,
         clasif: { tipo: e.hayLesion ? "" : salud() ? "Evento de salud (sin lesión traumática)" : menor() ? "Incidente sin lesionados" : "Cuasi-accidente (sin lesión)", codigo281: e.hayLesion || salud() ? (+f.medico.traslado || 0) : 0, calificacion: "" },
         preguntas: { reunion: e.reunion === "Sí" ? "si" : e.reunion === "No" ? "no" : "" }
       };
       if (salud()) datos.salud = U.copia(f.salud);
-      if (sinLesion()) datos.rapido = { ...U.copia(f.rapido), tipos: menor() ? f.rapido.tipos.slice() : [], danio: menor() ? f.rapido.danio : "" };
+      if (sinLesion()) datos.rapido = Object.assign(U.copia(f.rapido), { tipos: menor() ? f.rapido.tipos.slice() : [], danio: menor() ? f.rapido.danio : "" });
       if (!salud() && f.evidencia.guardada) datos.evidFisica = { guardada: f.evidencia.guardada, que: f.evidencia.guardada === "Sí" ? f.evidencia.que.trim() : "", entregada: "" };
       return { datos, fotos: f.fotos.map(x => ({ nombre: x.nombre, b64: x.b64, desc: x.desc })) };
     }

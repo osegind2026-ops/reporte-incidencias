@@ -179,7 +179,7 @@ B.ui = {
   opciones(lista, valor, vacio) {
     return (vacio !== undefined ? `<option value="">${U.esc(vacio)}</option>` : "") + lista.map(o => {
       const v = typeof o === "object" ? o.v : o, t = typeof o === "object" ? o.t : o;
-      return `<option value="${U.esc(v)}" ${String(v) === String(valor ?? "") ? "selected" : ""}>${U.esc(t)}</option>`;
+      return `<option value="${U.esc(v)}" ${String(v) === String(valor == null ? "" : valor) ? "selected" : ""}>${U.esc(t)}</option>`;
     }).join("");
   },
   /* tabla ordenable: cols [{k, t, f(fila)->html, v(fila)->valor de orden, c:clase}] */
@@ -191,7 +191,7 @@ B.ui = {
       const col = cols.find(c => c.k === st.k);
       if (col) {
         const val = col.v || (f => f[col.k]);
-        l.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "number" && typeof y === "number" ? x - y : String(x ?? "").localeCompare(String(y ?? ""), "es", { numeric: true })) * st.dir; });
+        l.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "number" && typeof y === "number" ? x - y : String(x == null ? "" : x).localeCompare(String(y == null ? "" : y), "es", { numeric: true })) * st.dir; });
       }
       const lim = max && l.length > max ? max : l.length;
       cont.innerHTML = `<div class="tabla-cont ${clase || ""}"><table class="tabla"><thead><tr>${cols.map(c => `<th class="${c.c || ""} ${c.k ? "ord" : ""} ${st.k === c.k ? (st.dir > 0 ? "asc" : "desc") : ""}" data-k="${c.k || ""}">${c.t}</th>`).join("")}</tr></thead>
