@@ -11,6 +11,8 @@
 "use strict";
 (function () {
   const C = window.INC_CFG || {}, ui = B.ui, E = s => U.esc(s);
+  // capturas de la guia rapida (guia/capturas.js): datos de ejemplo sin Google; nunca existe en la pagina publicada
+  const DEMO = window.INC_MOVIL_DEMO || null;
   const raiz = document.getElementById("raiz");
   const enc = new TextEncoder(), dec = new TextDecoder();
   const b64 = buf => { let s = ""; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s); };
@@ -46,6 +48,7 @@
     });
   }
   async function publicar(texto) {
+    if (DEMO) return;
     const cuerpo = new URLSearchParams();
     cuerpo.append("entry." + C.entry, texto); cuerpo.append("fvv", "1"); cuerpo.append("pageHistory", "0");
     await fetch("https://docs.google.com/forms/d/e/" + C.formId + "/formResponse", { method: "POST", mode: "no-cors", body: cuerpo });
@@ -63,6 +66,11 @@
   }
   async function entrar(rpe, clave) {
     rpe = U.up(rpe);
+    if (DEMO) {
+      const g = (alg, uso) => crypto.subtle.generateKey(alg, false, uso).then(k => k.privateKey);
+      S = { rpe, nombre: DEMO.nombre || rpe, consulta: false, paq: null, llaves: { fir: await g({ name: "ECDSA", namedCurve: "P-256" }, ["sign", "verify"]), uFir: await g({ name: "ECDSA", namedCurve: "P-256" }, ["sign", "verify"]), uRec: null } };
+      return;
+    }
     if (!/^[0-9A-Z]{5}$/.test(rpe)) throw new Error("Escribe tu RPE (5 caracteres).");
     const f = await hoja("select A,B where B starts with 'INC2U|" + rpe + "|' order by A desc limit 1");
     const fila = f[0] && f[0][1];
@@ -81,6 +89,7 @@
   /* ---------- foto de datos que la PC cifro para este usuario */
   let D = null;
   async function cargarDatos() {
+    if (DEMO) { D = DEMO.datos; B.estado = { aperturas: D.ap || {}, config: { linkHoras: D.linkHoras, plazoDias: D.plazoDias } }; return D; }
     const f = await hoja("select A,B where B starts with 'INC2S|' order by A desc limit 80");
     const env = [], por = {};
     f.forEach(r => { const p = (r[1] || "").split("|"); if (p.length < 5) return; if (!por[p[1]]) { por[p[1]] = { n: +p[3], partes: {} }; env.push(p[1]); } por[p[1]].partes[+p[2]] = p.slice(4).join("|"); });
@@ -134,7 +143,7 @@
     const id = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(36).padStart(2, "0")).join("").toUpperCase();
     const c = JSON.stringify({ op, id, rpe: S.rpe, fh: new Date().toISOString(), datos });
     const f = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, S.llaves.uFir, enc.encode(c));
-    await publicar("INC2M|" + id + "|" + await cifrarSI(JSON.stringify({ c, f: b64u(f) })));
+    if (!DEMO) await publicar("INC2M|" + id + "|" + await cifrarSI(JSON.stringify({ c, f: b64u(f) })));
     const l = leer(pendKey()) || [];
     l.push({ op, id, datos, fh: new Date().toISOString(), fhLocal: U.ahora() });
     guardar(pendKey(), l);
