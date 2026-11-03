@@ -35,7 +35,7 @@
   function hoja(tq) {
     return new Promise((res, rej) => {
       const fn = "incmv" + Date.now() + Math.floor(Math.random() * 1000), s = document.createElement("script");
-      const t = setTimeout(() => { limpiar(); rej(new Error("Google no respondió. Revisa tu señal e intenta de nuevo.")); }, 30000);
+      const t = setTimeout(() => { limpiar(); rej(new Error("Google tardó demasiado en responder. Revisa tu señal o datos móviles e intenta de nuevo.")); }, 20000);
       const limpiar = () => { delete window[fn]; s.remove(); clearTimeout(t); };
       window[fn] = d => {
         limpiar();
@@ -64,7 +64,8 @@
       uRec: await imp(paq.uRec, { name: "ECDH", namedCurve: "P-256" }, ["deriveKey"])
     };
   }
-  async function entrar(rpe, clave) {
+  async function entrar(rpe, clave, paso) {
+    paso = paso || function () { };
     rpe = U.up(rpe);
     if (DEMO) {
       const g = (alg, uso) => crypto.subtle.generateKey(alg, false, uso).then(k => k.privateKey);
@@ -72,9 +73,11 @@
       return;
     }
     if (!/^[0-9A-Z]{5}$/.test(rpe)) throw new Error("Escribe tu RPE (5 caracteres).");
+    paso("Buscando tu acceso…");
     const f = await hoja("select A,B where B starts with 'INC2U|" + rpe + "|' order by A desc limit 1");
     const fila = f[0] && f[0][1];
     if (!fila) throw new Error("Tu acceso desde el celular no está activado. En la PC: menú de tu usuario → «Usar desde el celular».");
+    paso("Abriendo tus llaves…");
     const partes = fila.split("|")[2].split(".");
     const base = await crypto.subtle.importKey("raw", enc.encode(clave), "PBKDF2", false, ["deriveKey"]);
     const llave = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: deB64u(partes[0]), iterations: 300000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
@@ -183,7 +186,8 @@
       e.preventDefault();
       const b = f.querySelector("button[type=submit]"), er = document.getElementById("mE");
       b.disabled = true; b.innerHTML = `<span class="giro chico"></span> Entrando…`; er.classList.add("oculto");
-      try { await entrar(document.getElementById("mR").value, document.getElementById("mC").value); await abrir(); }
+      const paso = t => { b.innerHTML = `<span class="giro chico"></span> ${t}`; };
+      try { await entrar(document.getElementById("mR").value, document.getElementById("mC").value, paso); await abrir(); }
       catch (x) { er.textContent = x.message; er.classList.remove("oculto"); b.disabled = false; b.innerHTML = `${B.ico("llave")} Entrar`; }
     };
   }
