@@ -1,0 +1,10 @@
+{
+  "name": "Incidencias SI",
+  "short_name": "Incidencias SI",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F3F1",
+  "theme_color": "#691C32",
+  "icons": [{ "src": "../img/incidencias_256.png", "sizes": "256x256", "type": "image/png" }]
+}

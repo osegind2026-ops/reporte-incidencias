@@ -38,6 +38,8 @@ B.u = {
   norm(s) { return String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); },
   iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); },
   hoy() { return B.u.iso(new Date()); },
+  // fecha y hora LOCAL "AAAA-MM-DDTHH:MM:SS" (el vencimiento de los links se guarda en hora local)
+  ahora(d) { d = d || new Date(); return B.u.iso(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()); },
   ahoraHora() { const d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); },
   fecha(s) { const [y, m, d] = String(s).slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); },
   sumar(s, n) { const d = B.u.fecha(s); d.setDate(d.getDate() + n); return B.u.iso(d); },
@@ -196,7 +198,7 @@ B.d = {
       a.paso && a.total ? "paso " + a.paso + " de " + a.total + (a.tit ? " (" + a.tit + ")" : "") : "", a.disp || ""].filter(Boolean).join(" · ") : "";
     if (l.usado) return { t: "Reporte enviado", c: "v", det };
     if (l.anulado) return { t: "Cancelado", c: "n", det };
-    const vencido = l.vence <= new Date().toISOString().slice(0, 19);
+    const vencido = l.vence <= U.ahora();
     if (!a.ultima) return { t: vencido ? "Venció sin abrirse" : "Sin abrir", c: vencido ? "r" : "n", det: vencido ? "" : "Aún no se ha abierto" + (B.enLinea && B.enLinea.listo() ? " (en línea se actualiza cada 3 min)" : "") };
     if (vencido) return { t: "Venció sin enviarse", c: "r", det };
     const llenando = Date.now() - new Date(a.ultima) < 15 * 60000;

@@ -203,3 +203,6 @@ details.cat-det[open] summary { margin-bottom: 8px; }
 .ej-panel .ej-grupo > .badge { margin-bottom: 4px; }
 .ej-it { font-size: 12.5px; line-height: 1.45; padding: 3px 0 3px 10px; border-left: 2px solid var(--borde); margin: 2px 0; }
 .ej-f { font-size: 10.5px; color: var(--texto-3); white-space: nowrap; }
+
+/* filtros que pueden no caber en una linea (administrar links, app de celular) */
+.seg.envuelve, #aLf .seg { flex-wrap: wrap; }
