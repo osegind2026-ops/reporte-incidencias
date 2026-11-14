@@ -195,7 +195,7 @@ B.ui = {
       }
       const lim = max && l.length > max ? max : l.length;
       cont.innerHTML = `<div class="tabla-cont ${clase || ""}"><table class="tabla"><thead><tr>${cols.map(c => `<th class="${c.c || ""} ${c.k ? "ord" : ""} ${st.k === c.k ? (st.dir > 0 ? "asc" : "desc") : ""}" data-k="${c.k || ""}">${c.t}</th>`).join("")}</tr></thead>
-        <tbody>${l.length ? l.slice(0, lim).map((f, i) => `<tr class="${alClic ? "clic" : ""} ${filaClase ? filaClase(f) : ""}" data-i="${filas.indexOf(f)}">${cols.map(c => `<td class="${c.c || ""}">${c.f ? c.f(f, i) : U.esc(f[c.k])}</td>`).join("")}</tr>`).join("")
+        <tbody>${l.length ? l.slice(0, lim).map((f, i) => `<tr class="${alClic ? "clic" : ""} ${filaClase ? filaClase(f) : ""}" data-i="${filas.indexOf(f)}">${cols.map(c => `<td class="${c.c || ""}" data-l="${U.esc(String(c.t || "").replace(/<[^>]*>/g, ""))}">${c.f ? c.f(f, i) : U.esc(f[c.k])}</td>`).join("")}</tr>`).join("")
           : `<tr><td colspan="${cols.length}">${B.ui.vacio(vacio || "Sin registros")}</td></tr>`}</tbody></table></div>
         ${lim < l.length ? `<div class="paginacion">Mostrando ${lim} de ${l.length}. Usa los filtros para acotar.</div>` : ""}`;
       cont.querySelectorAll("th.ord").forEach(th => th.onclick = () => { if (st.k === th.dataset.k) st.dir = -st.dir; else { st.k = th.dataset.k; st.dir = 1; } pintar(); });

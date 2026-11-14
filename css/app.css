@@ -146,6 +146,20 @@ textarea.inp { resize: vertical; min-height: 72px; line-height: 1.45; }
   .turno-sel input { width: 118px; }
 }
 
+/* tablas como tarjetas en el celular (la etiqueta de cada dato sale de data-l, ver ui.tabla) */
+@media (max-width: 640px) {
+  .tabla-cont .tabla thead { display: none; }
+  .tabla-cont .tabla, .tabla-cont .tabla tbody { display: block; }
+  .tabla-cont .tabla tr { display: block; padding: 10px 12px; border-bottom: 1px solid var(--borde); }
+  .tabla-cont .tabla td { display: block; position: relative; padding: 3px 0 3px 38%; border: 0; text-align: right; min-height: 22px; }
+  .tabla-cont .tabla td::before { content: attr(data-l); position: absolute; left: 0; top: 4px; width: 36%; color: var(--texto-3); font-size: 11.5px; text-align: left; }
+  .tabla-cont .tabla td[data-l=""] { padding-left: 0; }
+  .tabla-cont .tabla td[data-l=""]::before { content: none; }
+  .tabla-cont .tabla td .badge { white-space: normal; max-width: 100%; }
+  .tabla-cont .tabla td[colspan] { display: block; text-align: center; }
+  .tabla-cont .tabla td[colspan]::before { content: none; }
+}
+
 /* ---------------- Tarjetas ---------------- */
 .tarjeta { background: var(--panel); border-radius: var(--radio); box-shadow: var(--sombra); padding: 20px; margin-bottom: 18px; }
 .tarjeta-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }

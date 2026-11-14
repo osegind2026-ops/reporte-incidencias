@@ -108,6 +108,10 @@ B.d = {
   cfg() { return (B.estado && B.estado.config) || {}; },
   cat() { return (B.estado && B.estado.catalogos) || {}; },
   lector() { return !!(B.usuario && B.usuario.rol === "consulta"); },
+  // administrador: altas de usuarios, configuracion, catalogos, respaldos y bitacora (v1.5.0)
+  admin() { return !!(B.usuario && B.usuario.rol === "admin"); },
+  // links del formulario: supervisores y, en la app web del celular (solo consulta), tambien
+  puedeLinks() { return !this.lector() || !!B.web; },
   incidencias(conAnuladas) { return ((B.estado && B.estado.incidencias) || []).filter(x => conAnuladas || x.estado !== "anulado"); },
   inc(id) { return ((B.estado && B.estado.incidencias) || []).find(x => String(x.id) === String(id)); },
   persona(rpe) {
