@@ -100,6 +100,11 @@ textarea.inp { resize: vertical; min-height: 72px; line-height: 1.45; }
 .seg.estatus button.on[data-v="Realizada"] { color: var(--verde); }
 .seg.estatus button.on[data-v="En proceso"] { color: #8a6526; }
 .seg.estatus button.on[data-v="Pendiente"] { color: var(--rojo); }
+/* filtros de botones en pantallas angostas: se acomodan en renglones y nunca salen de su tarjeta */
+@media (max-width: 640px) {
+  .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .seg button { flex: 1 1 auto; white-space: nowrap; }
+}
 
 /* ---------------- Layout ---------------- */
 .app { display: flex; min-height: 100vh; }
@@ -156,7 +161,7 @@ textarea.inp { resize: vertical; min-height: 72px; line-height: 1.45; }
   .tabla-cont .tabla td[data-l=""] { padding-left: 0; }
   .tabla-cont .tabla td[data-l=""]::before { content: none; }
   .tabla-cont .tabla td .badge { white-space: normal; max-width: 100%; }
-  .tabla-cont .tabla td[colspan] { display: block; text-align: center; }
+  .tabla-cont .tabla td[colspan] { display: block; text-align: center; padding: 0; }
   .tabla-cont .tabla td[colspan]::before { content: none; }
 }
 
@@ -164,6 +169,12 @@ textarea.inp { resize: vertical; min-height: 72px; line-height: 1.45; }
 .tarjeta { background: var(--panel); border-radius: var(--radio); box-shadow: var(--sombra); padding: 20px; margin-bottom: 18px; }
 .tarjeta-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .tarjeta-cab .acciones { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+/* el titulo comparte renglon con su icono (antes, en pantallas angostas, el icono quedaba solo arriba); los botones bajan si no caben */
+.tarjeta-cab > div:not(.ico-tarjeta):not(.acciones) { flex: 1 1 0; min-width: 0; }
+@media (max-width: 640px) { .tarjeta-cab .acciones { flex-basis: 100%; justify-content: flex-end; } }
+/* folios y claves en avisos no se parten en dos renglones */
+.aviso a { white-space: nowrap; }
+.tabla td:first-child > b { white-space: nowrap; }
 .tarjeta-cab p { margin: 3px 0 0; font-size: 12.5px; color: var(--texto-2); }
 .ico-tarjeta { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex: none; }
 .ico-tarjeta svg { width: 20px; height: 20px; }
@@ -265,6 +276,12 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
 
 .filtros { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
 .filtros .campo { margin-bottom: 0; min-width: 150px; }
+/* celular: cada filtro a todo lo ancho, alineados (antes cada uno con su propio ancho) */
+@media (max-width: 640px) {
+  .filtros { gap: 8px; }
+  .filtros .campo { flex: 1 1 100%; min-width: 0; }
+  .filtros .campo .inp, .filtros .campo select { width: 100% !important; }
+}
 .buscar { position: relative; }
 .buscar svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--texto-3); }
 .buscar .inp { padding-left: 34px; }
