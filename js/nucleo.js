@@ -48,7 +48,8 @@ B.u = {
   media(s) { if (!s) return ""; const d = B.u.fecha(s); return pad(d.getDate()) + "-" + MESES_C[d.getMonth()] + "-" + d.getFullYear(); },
   // "26 de octubre de 2026"
   larga(s) { if (!s) return ""; const d = B.u.fecha(s); return d.getDate() + " de " + MESES[d.getMonth()].toLowerCase() + " de " + d.getFullYear(); },
-  fh(s) { if (!s) return ""; return B.u.corta(s) + (String(s).length > 10 ? " " + String(s).slice(11, 16) : ""); },
+  // las horas guardadas en UTC (terminan en Z: archivos para GitHub, llaves) se muestran en la hora local
+  fh(s) { if (!s) return ""; if (/^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(String(s))) s = B.u.ahora(new Date(s)); return B.u.corta(s) + (String(s).length > 10 ? " " + String(s).slice(11, 16) : ""); },
   diaSemana(s) { return DIAS[B.u.fecha(s).getDay()]; },
   dias(a, b) { return Math.round((B.u.fecha(b) - B.u.fecha(a)) / 864e5); },
   up(s) { return String(s || "").trim().toUpperCase(); },
@@ -67,6 +68,37 @@ B.u = {
   copia(o) { return JSON.parse(JSON.stringify(o === undefined ? null : o)); }
 };
 const U = B.u;
+/* cambios campo por campo entre dos versiones de un registro (app web del celular): [[ruta], antes, despues].
+   Un arreglo que cambio de tamano cuenta como un solo cambio. */
+U.igual = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+U.dif = function (a, b, ruta, out) {
+  ruta = ruta || []; out = out || [];
+  if (U.igual(a, b)) return out;
+  const obj = v => v !== null && typeof v === "object";
+  if (obj(a) && obj(b) && Array.isArray(a) === Array.isArray(b) && (!Array.isArray(a) || a.length === b.length)) {
+    new Set(Object.keys(a).concat(Object.keys(b))).forEach(k => U.dif(a[k], b[k], ruta.concat(k), out));
+    return out;
+  }
+  out.push([ruta, a === undefined ? null : a, b === undefined ? null : b]);
+  return out;
+};
+U.leerRuta = (o, r) => r.reduce((v, k) => v == null ? undefined : v[k], o);
+U.ponerRuta = (o, r, val) => {
+  let v = o;
+  for (let i = 0; i < r.length - 1; i++) { if (v[r[i]] == null || typeof v[r[i]] !== "object") v[r[i]] = /^\d+$/.test(String(r[i + 1])) ? [] : {}; v = v[r[i]]; }
+  v[r[r.length - 1]] = val;
+  return o;
+};
+// aplica cambios hechos sobre una version anterior: si en la PC ese campo no cambio, se aplica; si cambio distinto, es conflicto (gana la PC)
+U.combinar = (actual, cambios) => {
+  const item = U.copia(actual), conflictos = [];
+  for (const [r, antes, despues] of cambios) {
+    const cur = U.leerRuta(item, r);
+    if (U.igual(cur, antes)) U.ponerRuta(item, r, U.copia(despues));
+    else if (!U.igual(cur, despues)) conflictos.push({ ruta: r, tuyo: despues, pc: cur === undefined ? null : cur });
+  }
+  return { item, conflictos };
+};
 
 /* ---------------------------------------------------------------- API */
 B.api = {

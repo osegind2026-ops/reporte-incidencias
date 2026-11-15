@@ -3,6 +3,8 @@
    ========================================================================= */
 "use strict";
 const ICO = {
+  flecha: '<path d="M9 6l6 6-6 6"/>',
+  mensaje: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
   inicio: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
   lista: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>',
   escudo: '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/>',
@@ -88,6 +90,28 @@ B.ui = {
       });
       if (alAbrir) alAbrir(v);
       const f = v.querySelector("input,textarea,select"); if (f) setTimeout(() => f.focus(), 50);
+    });
+  },
+  // detalle de un indicador: los registros que forman el numero; clic en uno = abrirlo (en celular sube desde abajo)
+  detalle({ titulo, sub, filas, vacio }) {
+    const html = `${sub ? `<p class="muted peque" style="margin:0 0 12px;line-height:1.45">${sub}</p>` : ""}
+      <div class="det-lista">${filas.length ? filas.map((f, i) => `<button type="button" class="det-fila" data-i="${i}"><div class="det-tit">${f.tit}</div>${f.meta ? `<div class="det-meta">${f.meta}</div>` : ""}${f.extra ? `<div class="det-extra">${f.extra}</div>` : ""}${f.ir ? `<span class="det-ir">${B.ico("flecha")}</span>` : ""}</button>`).join("") : B.ui.vacio(vacio || "Sin registros.", "ok")}</div>`;
+    return B.ui.modal({
+      titulo: titulo + (filas.length ? ` <span class="badge n">${filas.length}</span>` : ""), html, ancho: true, botones: [{ t: "Cerrar", c: "sec", v: null }],
+      alAbrir: v => {
+        v.classList.add("velo-det");
+        v.querySelectorAll(".det-fila").forEach(b => b.onclick = () => { const f = filas[+b.dataset.i]; if (!f.ir) return; v.querySelector("[data-x]").click(); B.app.ir(f.ir); });
+      }
+    });
+  },
+  // tarjetas de indicador con detalle: <div class="kpi" data-det="clave"> + mapa clave -> funcion
+  enlazarDetalle(cont, mapa) {
+    cont.querySelectorAll("[data-det]").forEach(k => {
+      if (!mapa[k.dataset.det]) return;
+      k.classList.add("clic"); k.tabIndex = 0; k.setAttribute("role", "button");
+      const abrir = e => { if (e.target.closest("a,button,input,select")) return; mapa[k.dataset.det](); };
+      k.onclick = abrir;
+      k.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(e); } };
     });
   },
   confirmar(msg, titulo, tSi, peligro) {
