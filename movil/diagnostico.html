@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Incidencias SI · Diagnóstico</title>
+<style>
+  body { font: 15px/1.45 Arial, sans-serif; margin: 0; padding: 16px; background: #F7F4F1; color: #2B2124; }
+  h1 { font-size: 18px; color: #691C32; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: #6B6460; font-size: 13px; }
+  li { background: #fff; border-radius: 10px; padding: 9px 12px; margin: 0 0 8px; list-style: none; word-break: break-word; }
+  ul { padding: 0; margin: 0; }
+  .ok { border-left: 5px solid #2E7D4F; } .mal { border-left: 5px solid #C81E2D; } .esp { border-left: 5px solid #BC955C; }
+  small { color: #6B6460; }
+</style>
+</head>
+<body>
+<h1>Incidencias SI · Diagnóstico del celular</h1>
+<p>Espera a que terminen todas las pruebas (unos segundos) y manda una captura de toda la pantalla.</p>
+<ul id="l"></ul>
+<script>
+/* Pagina de diagnostico sin dependencias (ES5): que parte de la app web no carga en este celular */
+(function () {
+  var l = document.getElementById("l");
+  function fila(t, est, det) { var li = document.createElement("li"); li.className = est; li.innerHTML = "<b>" + t + "</b><br><small>" + (det || "") + "</small>"; l.appendChild(li); return li; }
+  function pon(li, est, det) { li.className = est; li.querySelector("small").innerHTML = det; }
+  fila("Navegador", "esp", navigator.userAgent);
+  fila("Conexión segura (https)", window.isSecureContext ? "ok" : "mal", location.protocol + " · isSecureContext = " + window.isSecureContext);
+  fila("Cifrado del navegador (crypto.subtle)", window.crypto && window.crypto.subtle ? "ok" : "mal", window.crypto && window.crypto.subtle ? "disponible" : "NO disponible: la app no puede abrir tus datos");
+  var feats = [["fetch", typeof fetch], ["Promise", typeof Promise], ["TextEncoder", typeof TextEncoder], ["MutationObserver", typeof MutationObserver], ["URLSearchParams", typeof URLSearchParams]];
+  var falt = feats.filter(function (f) { return f[1] === "undefined"; }).map(function (f) { return f[0]; });
+  fila("Funciones del navegador", falt.length ? "mal" : "ok", falt.length ? "Faltan: " + falt.join(", ") : "todas disponibles");
+  var archivos = ["../config.js", "../js/arranque.js", "../js/gzip.js", "../js/web.js", "../css/app.css"];
+  var i = 0;
+  function sig() {
+    if (i >= archivos.length) { hoja(); return; }
+    var a = archivos[i++], li = fila("Descargar " + a.replace("../", ""), "esp", "descargando…"), t0 = Date.now();
+    if (typeof fetch === "undefined") { pon(li, "mal", "sin fetch"); sig(); return; }
+    var tiempo = setTimeout(function () { pon(li, "mal", "más de 30 s sin terminar"); }, 30000);
+    fetch(a + "?d=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text().then(function (t) { return [r.status, t]; }); }).then(function (x) {
+      clearTimeout(tiempo);
+      var det = "HTTP " + x[0] + " · " + Math.round(x[1].length / 1024) + " KB · " + ((Date.now() - t0) / 1000).toFixed(1) + " s", est = x[0] === 200 ? "ok" : "mal";
+      if (/\.js$/.test(a) && x[0] === 200) { try { new Function(x[1]); det += " · el navegador lo entiende"; } catch (e) { est = "mal"; det += " · ERROR al leerlo: " + e.message; } }
+      pon(li, est, det); sig();
+    }, function (e) { clearTimeout(tiempo); pon(li, "mal", "falló: " + e.message); sig(); });
+  }
+  function hoja() {
+    var li = fila("Hoja de Google", "esp", "consultando…");
+    var s1 = document.createElement("script"); s1.src = "../config.js?d=" + Date.now();
+    s1.onload = function () {
+      var C = window.INC_CFG || {};
+      if (!C.hojaId) { pon(li, "mal", "config.js sin hoja"); fin(); return; }
+      var fn = "dg" + Date.now(), s = document.createElement("script"), t = setTimeout(function () { pon(li, "mal", "Google no respondió en 25 s"); fin(); }, 25000);
+      window[fn] = function (d) { clearTimeout(t); var n = d.table ? d.table.rows.length : 0; pon(li, d.status === "error" ? "mal" : "ok", d.status === "error" ? "Google rechazó la consulta" : "responde · " + n + " publicaciones para celulares"); fin(); };
+      s.onerror = function () { clearTimeout(t); pon(li, "mal", "no se pudo consultar Google"); fin(); };
+      s.src = "https://docs.google.com/spreadsheets/d/" + C.hojaId + "/gviz/tq?tqx=responseHandler:" + fn + "&tq=" + encodeURIComponent("select A where B starts with 'INC2X|' limit 50") + "&_=" + Date.now();
+      document.head.appendChild(s);
+    };
+    s1.onerror = function () { pon(li, "mal", "no se pudo cargar config.js"); fin(); };
+    document.head.appendChild(s1);
+  }
+  function fin() { fila("Listo", "ok", new Date().toLocaleString()); }
+  sig();
+})();
+</script>
+</body>
+</html>
