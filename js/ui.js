@@ -104,6 +104,27 @@ B.ui = {
       }
     });
   },
+  // barra de pestanas deslizable: sombras y flechas cuando hay pestanas fuera de la vista; la activa queda a la vista
+  desliz(el) {
+    if (!el) return;
+    let env = el.parentElement;
+    if (!env.classList.contains("desliz")) {
+      env = document.createElement("div"); env.className = "desliz pista";
+      el.parentNode.insertBefore(env, el); env.appendChild(el);
+      env.insertAdjacentHTML("beforeend", `<button type="button" class="desliz-b izq" aria-label="Pestañas anteriores" title="Anteriores">${B.ico("flecha")}</button><button type="button" class="desliz-b der" aria-label="Más pestañas" title="Más pestañas">${B.ico("flecha")}</button>`);
+      const mover = d => el.scrollBy({ left: d * Math.max(160, el.clientWidth * .7), behavior: "smooth" });
+      env.querySelector(".izq").onclick = () => mover(-1);
+      env.querySelector(".der").onclick = () => mover(1);
+      env._act = () => { env.classList.toggle("hay-izq", el.scrollLeft > 4); env.classList.toggle("hay-der", el.scrollLeft + el.clientWidth < el.scrollWidth - 4); };
+      el.addEventListener("scroll", env._act, { passive: true });
+      window.addEventListener("resize", env._act);
+      el.addEventListener("click", e => { const b = e.target.closest("button"); if (b) b.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }); });
+      setTimeout(() => env.classList.remove("pista"), 3500);
+    }
+    const on = el.querySelector(".on");
+    if (on) el.scrollLeft = Math.max(0, on.offsetLeft - (el.clientWidth - on.offsetWidth) / 2);
+    env._act();
+  },
   // tarjetas de indicador con detalle: <div class="kpi" data-det="clave"> + mapa clave -> funcion
   enlazarDetalle(cont, mapa) {
     cont.querySelectorAll("[data-det]").forEach(k => {

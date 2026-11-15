@@ -269,11 +269,32 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
 .buscar svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--texto-3); }
 .buscar .inp { padding-left: 34px; }
 
-.pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); margin-bottom: 16px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+/* pestanas del expediente y de la ficha: barra de navegacion con fondo; si no caben, se deslizan (ui.desliz: sombras y flechas) */
+.pestanas { display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: #F1ECE7; border-radius: 14px; padding: 5px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
 .pestanas::-webkit-scrollbar { display: none; }
 .ruta { word-break: break-all; }
-.pestanas button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--texto-2); cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.pestanas button.on { color: var(--guinda); border-bottom-color: var(--guinda); }
+.pestanas button { border: 0; background: none; padding: 9px 15px; border-radius: 10px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--texto-2); cursor: pointer;
+  white-space: nowrap; scroll-snap-align: center; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
+.pestanas button:hover { background: rgba(255, 255, 255, .65); color: var(--texto); }
+.pestanas button.on { background: #fff; color: var(--guinda); box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 4px 12px rgba(105, 28, 50, .10); }
+.desliz { position: relative; margin-bottom: 16px; }
+.desliz > .pestanas { margin-bottom: 0; }
+.desliz::before, .desliz::after { content: ""; position: absolute; top: 0; bottom: 0; width: 64px; pointer-events: none; opacity: 0; transition: opacity .2s ease; z-index: 1; }
+.desliz::before { left: 0; border-radius: 14px 0 0 14px; background: linear-gradient(90deg, #F1ECE7 35%, rgba(241, 236, 231, 0)); }
+.desliz::after { right: 0; border-radius: 0 14px 14px 0; background: linear-gradient(270deg, #F1ECE7 35%, rgba(241, 236, 231, 0)); }
+.desliz.hay-izq::before, .desliz.hay-der::after { opacity: 1; }
+.desliz-b { position: absolute; top: 50%; z-index: 2; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--borde); background: #fff; color: var(--guinda);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12); display: grid; place-items: center; cursor: pointer; padding: 0; opacity: 0; pointer-events: none;
+  transform: translateY(-50%) scale(.75); transition: opacity .2s ease, transform .2s ease, background .15s, color .15s; }
+.desliz-b svg { width: 16px; height: 16px; }
+.desliz-b.izq { left: 5px; } .desliz-b.izq svg { transform: rotate(180deg); }
+.desliz-b.der { right: 5px; }
+.desliz.hay-izq .desliz-b.izq, .desliz.hay-der .desliz-b.der { opacity: 1; pointer-events: auto; transform: translateY(-50%) scale(1); }
+.desliz-b:hover { background: var(--guinda); color: #fff; }
+.desliz.hay-der.pista .desliz-b.der { animation: deslizPista 1.4s ease-in-out 2; }
+@keyframes deslizPista { 50% { transform: translateY(-50%) translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { .desliz.hay-der.pista .desliz-b.der { animation: none; } }
 
 /* Captura de actividades */
 .renglon { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 10px; align-items: start; padding: 10px; border: 1px solid var(--borde); border-radius: 12px; background: #fff; margin-bottom: 8px; transition: box-shadow .15s, border-color .15s; }
@@ -287,6 +308,13 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
   border: 1px solid var(--borde); border-radius: 14px; padding: 10px 12px; box-shadow: var(--sombra-2); margin-top: 16px; z-index: 5; }
 .barra-guardar .estado { margin-right: auto; font-size: 12.5px; color: var(--texto-2); padding-left: 6px; }
 .barra-guardar .estado.sucio { color: #8a6526; font-weight: 600; }
+@media (max-width: 640px) {
+  .barra-guardar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; bottom: 8px; padding: 10px; }
+  .barra-guardar .estado { grid-column: 1 / -1; margin: 0; padding: 0 2px; line-height: 1.3; }
+  .barra-guardar label { display: none; }
+  .barra-guardar select { width: 100% !important; min-width: 0; }
+  .barra-guardar .btn { padding-left: 12px; padding-right: 12px; white-space: nowrap; }
+}
 
 /* Combobox */
 .combo { position: relative; }
