@@ -23,10 +23,24 @@
     img.web-sinfoto { background: #EFEAE6; min-width: 40px; min-height: 40px; }
     @keyframes webBrillo { to { background-position: -200% 0; } }
     @media (max-width: 640px) {
-      .barra h1 { font-size: 17px; }
+      /* encabezado en un solo renglon: menu, titulo (recortado) y botones solo con icono */
+      .barra { flex-wrap: nowrap; gap: 8px; padding-left: 10px; padding-right: 10px; }
+      .barra > div:not(.barra-der) { flex: 1; min-width: 0; }
+      .barra h1 { font-size: 16px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .barra .sub { display: none; }
+      .barra-der { flex: none; margin-left: auto; gap: 6px; }
       #wFecha span { display: none; }
-      .barra-der { gap: 6px; }
+      #wFecha, #bLink { padding: 8px 9px; gap: 0; }
+      #bLink { font-size: 0; }
+      #bLink svg { width: 18px; height: 18px; margin: 0; }
+      .barra .avatar { width: 34px; height: 34px; font-size: 11px; }
+      /* nada mas ancho que la pantalla: etiquetas que se acomodan y renglones de captura en una columna */
+      .badge, .chips span { white-space: normal; max-width: 100%; }
+      .editor-fila { grid-template-columns: minmax(0, 1fr) !important; }
+      .editor-fila > * { grid-column: auto !important; min-width: 0; }
+      #vista input, #vista select, #vista textarea { max-width: 100%; min-width: 0; }
+      #vista .grid2, #vista .grid3 { grid-template-columns: minmax(0, 1fr) !important; }
+      #vista table { display: block; max-width: 100%; overflow-x: auto; }
       .login { padding: 18px 14px; }
       .menu-usuario { right: 10px; left: 10px; width: auto; }
       .toasts { left: 12px; right: 12px; }
